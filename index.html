@@ -5,6 +5,36 @@
         <meta name="viewport" content="width=device-width, initial-scale=1">
         <title>PhotoGroove</title>
         <link rel="stylesheet" href="http://elm-in-action.com/styles.css">
+        <link rel="stylesheet" href="http://elm-in-action.com/range-slider.css">
+        <script src="http://elm-in-action.com/range-slider.js"></script>
+        <!-- if we need polyfill for custom elements -->
+        <!-- https://github.com/webcomponents/polyfills/tree/master/packages/custom-elements -->
+        <script>
+            class RangeSlider extends HTMLElement {
+                connectedCallback() {
+                    var input = document.createElement('input');
+                    this.appendChild(input);
+
+                    var jsr = new JSR(input, {
+                        max: this.max,
+                        values: [this.val],
+                        sliders: 1,
+                        grid: false
+                    });
+
+                    var rangeSliderNode = this;
+
+                    jsr.addEventListener("update", function(elem, value) {
+                        var event = new CustomEvent("slide", {
+                            detail: { userSlideTo: value }
+                        });
+                        rangeSliderNode.dispatchEvent(event);
+                        console.log(value);
+                    });
+                }
+            }
+            window.customElements.define('range-slider', RangeSlider);
+        </script>
       </head>
   <body>
       <section class="section">
