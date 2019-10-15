@@ -42,6 +42,7 @@
       </section>
     
     <script defer src="https://use.fontawesome.com/releases/v5.3.1/js/all.js"></script>
+    <script src="http://elm-in-action.com/pasta.js"></script>
     <script src="./elm.js"></script>
     <script>
       const errorLogger = error => console.error(`App Error: ${error}`);
@@ -51,6 +52,10 @@
       const flags = {}
       try {
         const app = Elm.PhotoGroove.init({ node, flags });
+
+        app.ports.setFilters.subscribe(options => {
+            Pasta.apply(document.getElementById('main-canvas'), options)
+        });
       } catch (e) {
         errorLogger(e);
         node.textContent = 'An error occurred while initializing the app';
