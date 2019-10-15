@@ -49,12 +49,17 @@
       const node = document.querySelector('#app');
       
       // add flags here
-      const flags = {}
+      const flags = Pasta.version
       try {
         const app = Elm.PhotoGroove.init({ node, flags });
-
         app.ports.setFilters.subscribe(options => {
-            Pasta.apply(document.getElementById('main-canvas'), options)
+            requestAnimationFrame(() => {
+                Pasta.apply(document.getElementById('main-canvas'), options)
+            });
+        });
+
+        Pasta.addActivityListener(activity => {
+            app.ports.activityChanges.send(activity);
         });
       } catch (e) {
         errorLogger(e);

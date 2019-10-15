@@ -20,6 +20,7 @@ type Msg
     = ClickedPhoto String
     | ClickedSize ThumbnailSize
     | ClickedSurpriseMe
+    | GotActivity String
     | GotRandomPhoto Photo
     | GotPhotos (Result Http.Error (List Photo))
     | SlidHue Int
@@ -47,6 +48,7 @@ viewLoaded photos selectedUrl model =
     , button
         [ onClick ClickedSurpriseMe ]
         [ text "Surprise Me!" ]
+    , div [ class "activity" ] [ text model.activity ]
     , div [ class "filters " ]
         [ viewFilter SlidHue "Hue" model.hue
         , viewFilter SlidRipple "Ripple" model.ripple
@@ -145,6 +147,9 @@ type alias FilterOptions =
 port setFilters : FilterOptions -> Cmd msg
 
 
+port activityChanges : (String -> msg) -> Sub msg
+
+
 photoDecoder : Decoder Photo
 photoDecoder =
     succeed Photo
@@ -161,6 +166,7 @@ type Status
 
 type alias Model =
     { status : Status
+    , activity : String
     , selectedUrl : String
     , chosenSize : ThumbnailSize
     , hue : Int
@@ -180,6 +186,7 @@ initialCmd =
 initialModel : Model
 initialModel =
     { status = Loading
+    , activity = ""
     , selectedUrl = "1.jpeg"
     , chosenSize = Medium
     , hue = 0
@@ -236,16 +243,23 @@ update msg model =
         ClickedSize size ->
             ( { model | chosenSize = size }, Cmd.none )
 
+        GotActivity activity ->
+            ( { model | activity = activity }, Cmd.none )
+
         GotRandomPhoto photo ->
             applyFilters { model | status = selectUrl photo.url model.status }
 
         GotPhotos (Ok photos) ->
-            case photos of
-                first :: rest ->
-                    ( { model | status = Loaded photos first.url }, Cmd.none )
+            applyFilters
+                { model
+                    | status =
+                        case photos of
+                            first :: rest ->
+                                Loaded photos first.url
 
-                [] ->
-                    ( model, Cmd.none )
+                            [] ->
+                                Loaded [] ""
+                }
 
         GotPhotos (Err httpError) ->
             ( { model | status = Errored "Server error!" }, Cmd.none )
@@ -276,11 +290,25 @@ update msg model =
             applyFilters { model | noise = noise }
 
 
-main : Program () Model Msg
+main : Program Float Model Msg
 main =
     Browser.element
-        { init = \flags -> ( initialModel, initialCmd )
+        { init = init
         , view = view
         , update = update
-        , subscriptions = \_ -> Sub.none
+        , subscriptions = subscriptions
         }
+
+
+init : Float -> ( Model, Cmd Msg )
+init flags =
+    let
+        activity =
+            "Initializing Pasta v" ++ String.fromFloat flags
+    in
+    ( { initialModel | activity = activity }, initialCmd )
+
+
+subscriptions : Model -> Sub Msg
+subscriptions model =
+    activityChanges GotActivity
