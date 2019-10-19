@@ -5,7 +5,9 @@
   "author": "Richart Feldman & Max P",
   "license": "MIT",
   "scripts": {
-    "dev": "elm-live src/Main.elm -s index.html -p 1234 -- --debug --output=./elm.js"
+    "start": "yarn dev",
+    "dev": "elm-live src/PhotoGroove.elm -s index.html -p 1234 -- --debug --output=./elm.js",
+    "test": "elm-test"
   },
   "devDependencies": {},
   "dependencies": {
