@@ -6,7 +6,7 @@
   "license": "MIT",
   "scripts": {
     "start": "yarn dev",
-    "dev": "elm-live src/PhotoFolders.elm -s index.html -p 1234 -- --debug --output=./elm.js",
+    "dev": "elm-live src/Main.elm -s index.html -p 1234 -- --debug --output=./elm.js",
     "dev-photogroove": "elm-live src/PhotoGroove.elm -s index.html -p 1234 -- --debug --output=./elm.js",
     "test": "elm-test"
   },
