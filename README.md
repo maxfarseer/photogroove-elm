@@ -9,4 +9,4 @@ yarn
 yarn dev
 ```
 
-Open `localhost:1234`
+Open `localhost:8080`
