@@ -6,16 +6,20 @@ import Html exposing (Html, a, footer, h1, li, nav, text, ul)
 import Html.Attributes exposing (classList, href)
 import Html.Lazy exposing (lazy)
 import Url exposing (Url)
+import Url.Parser as Parser exposing ((</>), Parser, s, string)
 
 
 type Page
-    = Gallery
+    = SelectedPhoto String
+    | Gallery
     | Folders
     | NotFound
 
 
 type alias Model =
-    { page : Page }
+    { page : Page
+    , key : Nav.Key
+    }
 
 
 view : Model -> Document Msg
@@ -47,10 +51,36 @@ viewHeader page =
 
         navLink : Page -> { url : String, caption : String } -> Html Msg
         navLink targetPage { url, caption } =
-            li [ classList [ ( "active", page == targetPage ) ] ]
+            li [ classList [ ( "active", isActive { link = targetPage, page = page } ) ] ]
                 [ a [ href url ] [ text caption ] ]
     in
     nav [] [ logo, links ]
+
+
+isActive : { link : Page, page : Page } -> Bool
+isActive { link, page } =
+    case ( link, page ) of
+        ---
+        ( Gallery, Gallery ) ->
+            True
+
+        ( Gallery, _ ) ->
+            False
+
+        ( Folders, Folders ) ->
+            True
+
+        ( Folders, SelectedPhoto _ ) ->
+            True
+
+        ( Folders, _ ) ->
+            False
+
+        ( SelectedPhoto _, _ ) ->
+            False
+
+        ( NotFound, _ ) ->
+            False
 
 
 viewFooter : Html msg
@@ -59,12 +89,23 @@ viewFooter =
 
 
 type Msg
-    = NothingYet
+    = ClickedLink Browser.UrlRequest
+    | ChangedUrl Url
 
 
 update : Msg -> Model -> ( Model, Cmd Msg )
 update msg model =
-    ( model, Cmd.none )
+    case msg of
+        ClickedLink urlRequest ->
+            case urlRequest of
+                Browser.External href ->
+                    ( model, Nav.load href )
+
+                Browser.Internal url ->
+                    ( model, Nav.pushUrl model.key (Url.toString url) )
+
+        ChangedUrl url ->
+            ( { model | page = urlToPage url }, Cmd.none )
 
 
 subscriptions : Model -> Sub Msg
@@ -74,23 +115,30 @@ subscriptions model =
 
 init : () -> Url -> Nav.Key -> ( Model, Cmd Msg )
 init flags url key =
-    case url.path of
-        "/gallery" ->
-            ( { page = Gallery }, Cmd.none )
+    ( { page = urlToPage url, key = key }, Cmd.none )
 
-        "/" ->
-            ( { page = Folders }, Cmd.none )
 
-        _ ->
-            ( { page = NotFound }, Cmd.none )
+urlToPage : Url -> Page
+urlToPage url =
+    Parser.parse parser url
+        |> Maybe.withDefault NotFound
+
+
+parser : Parser (Page -> a) a
+parser =
+    Parser.oneOf
+        [ Parser.map Folders Parser.top
+        , Parser.map Gallery (s "gallery")
+        , Parser.map SelectedPhoto (s "photos" </> Parser.string)
+        ]
 
 
 main : Program () Model Msg
 main =
     Browser.application
         { init = init
-        , onUrlRequest = \_ -> Debug.todo "handle URL requests"
-        , onUrlChange = \_ -> Debug.todo "handle URL changes"
+        , onUrlRequest = ClickedLink
+        , onUrlChange = ChangedUrl
         , subscriptions = subscriptions
         , update = update
         , view = view
