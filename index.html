@@ -52,6 +52,15 @@
       const flags = { version: Pasta.version }
       try {
         const app = Elm.Main.init({ node, flags });
+        app.ports.setFilters.subscribe(options => {
+            requestAnimationFrame(() => {
+                Pasta.apply(document.getElementById('main-canvas'), options)
+            });
+        });
+
+        Pasta.addActivityListener(activity => {
+            app.ports.activityChanges.send(activity);
+        });
       } catch (e) {
         errorLogger(e);
         node.textContent = 'An error occurred while initializing the app';
