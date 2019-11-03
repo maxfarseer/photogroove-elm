@@ -1,6 +1,5 @@
-port module PhotoGroove exposing (Model, Msg(..), Photo, Status(..), initialModel, main, photoDecoder, update, urlPrefix, view)
+port module PhotoGallery exposing (Model, Msg, init, subscriptions, update, view)
 
-import Browser
 import Html exposing (..)
 import Html.Attributes as Attr exposing (..)
 import Html.Events exposing (on, onClick)
@@ -288,16 +287,6 @@ update msg model =
 
         SlidNoise noise ->
             applyFilters { model | noise = noise }
-
-
-main : Program Float Model Msg
-main =
-    Browser.element
-        { init = init
-        , view = view
-        , update = update
-        , subscriptions = subscriptions
-        }
 
 
 init : Float -> ( Model, Cmd Msg )

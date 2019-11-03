@@ -49,7 +49,7 @@
       const node = document.querySelector('#app');
       
       // add flags here
-      const flags = {}
+      const flags = { version: Pasta.version }
       try {
         const app = Elm.Main.init({ node, flags });
       } catch (e) {
